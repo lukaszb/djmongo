@@ -8,11 +8,11 @@ DATABASES = {
     },
 
     'mongodb': {
-        'ENGINE': 'djongo.backend.mongodb',
+        'ENGINE': 'djmongo.backend.mongodb',
         'NAME': 'testdb',
     }
 }
 
 INSTALLED_APPS = (
-    'djongo',
+    'djmongo',
 )

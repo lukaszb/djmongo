@@ -1,0 +1,6 @@
+include README.rst
+include MANIFEST.in
+include manage.py
+include tests.py
+include run_test_and_report.sh
+recursive-include djmongo *.py
