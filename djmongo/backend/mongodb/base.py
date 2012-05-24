@@ -15,6 +15,7 @@ DEFAULT_PORT = 27017
 
 
 class FakeCursor(object):
+    lastrowid = None
     def execute(self, *args, **kwargs):
         pass
 
