@@ -118,7 +118,8 @@ class Manager(object):
                 yield tuple(doc.data.get(field) for field in fields)
 
     def upsert(self, data, safe=True, **filters):
-        data = self.collection.update(filters, data, upsert=True, safe=safe)
+        result = self.collection.update(filters, data, upsert=True, safe=safe)
+        data['_id'] = result.get('upserted')
         return self.document(data=data)
 
 

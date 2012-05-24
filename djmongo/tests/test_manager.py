@@ -94,3 +94,10 @@ class TestManager(TestCase):
         Item.objects.upsert({'id': 2, 'title': 'Slayer'}, id=1)
         self.assertItemsEqual(Item.objects.pluck('id', 'title'), [(2, 'Slayer')])
 
+    def test_upsert_returns_a_document(self):
+        item = Item.objects.upsert({'id': 1, 'title': 'Slayer'}, id=1)
+        self.assertIsInstance(item, Document)
+        self.assertIn('_id', item.data)
+        del item.data['_id']
+        self.assertDictEqual(item.data, {'id': 1, 'title': 'Slayer'})
+
