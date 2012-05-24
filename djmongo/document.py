@@ -118,7 +118,8 @@ class Manager(object):
                 yield tuple(doc.data.get(field) for field in fields)
 
     def upsert(self, data, safe=True, **filters):
-        self.collection.update(filters, data, upsert=True, safe=safe)
+        data = self.collection.update(filters, data, upsert=True, safe=safe)
+        return self.document(data=data)
 
 
 META_KEYS = ['using', 'collection_name', 'indexes']
