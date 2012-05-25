@@ -119,7 +119,8 @@ class Manager(object):
 
     def upsert(self, data, safe=True, **filters):
         result = self.collection.update(filters, data, upsert=True, safe=safe)
-        data['_id'] = result.get('upserted')
+        if safe:
+            data['_id'] = result.get('upserted')
         return self.document(data=data)
 
 

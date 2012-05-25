@@ -101,3 +101,8 @@ class TestManager(TestCase):
         del item.data['_id']
         self.assertDictEqual(item.data, {'id': 1, 'title': 'Slayer'})
 
+    def test_upsert_works_even_if_not_marked_as_safe(self):
+        data = {'id': 1, 'title': 'Slayer'}
+        item = Item.objects.upsert(data, id=1, safe=False)
+        self.assertDictEqual(item.data, data)
+
