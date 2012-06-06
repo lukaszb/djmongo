@@ -94,6 +94,16 @@ class TestDatabaseWrapper(TestCase):
         self.assertEqual(self.conn.get_connection_uri(),
             'mongodb://foo:bar@example.com:101/testdb')
 
+    def test_get_connection_uri_without_user_password(self, cw_mock):
+        self.conn.settings_dict = {
+            'HOST': 'example.com',
+            'PORT': 101,
+            'NAME': 'testdb',
+        }
+        self.assertEqual(self.conn.get_connection_uri(),
+            'example.com:101')
+
+
     def test_creation_drop_database(self, cw_mock):
         creation = self.conn.creation
         creation.connection = Mock()

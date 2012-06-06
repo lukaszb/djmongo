@@ -59,6 +59,10 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         port = self.settings_dict['PORT'] or DEFAULT_PORT
         if user and password:
             uri += ':'.join((user, password)) + '@'
+        elif not (user or password):
+            # no need to specify protocol uri if not user/password are used
+            # - otherwise warning would be raied by pymongo
+            return ':'.join((host, str(port)))
         uri += ':'.join((host, str(port)))
         uri = '/'.join((uri, self.settings_dict['NAME']))
         return uri
