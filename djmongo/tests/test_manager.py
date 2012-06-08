@@ -106,3 +106,28 @@ class TestManager(TestCase):
         item = Item.objects.upsert(data, id=1, safe=False)
         self.assertDictEqual(item.data, data)
 
+
+
+class CustomManager(Manager):
+
+    def foo(self):
+        if not hasattr(self, '_foo_calls'):
+            self._foo_calls = 0
+        self._foo_calls += 1
+
+
+class Book(Document):
+
+    class Meta:
+        using = 'mongodb'
+
+    objects = CustomManager()
+
+
+class TestCustomManager(TestCase):
+    
+    def test_custom_manager_method_called(self):
+        Book.objects.foo()
+        Book.objects.foo()
+        self.assertEqual(Book.objects._foo_calls, 2)
+

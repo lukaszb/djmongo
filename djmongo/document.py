@@ -154,8 +154,9 @@ class DocumentBase(type):
 
     def __new__(cls, name, bases, attrs):
         opts = attrs.pop('Meta', object())
-        manager = Manager()
-        attrs['objects'] = manager
+        if 'objects' not in attrs:
+            attrs['objects'] = Manager()
+        manager = attrs['objects']
         new_class = super(DocumentBase, cls).__new__(cls, name, bases, attrs)
         manager.document = new_class
         new_class._meta = Options.for_class(new_class, opts)
