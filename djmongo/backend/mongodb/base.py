@@ -75,7 +75,9 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
     @property
     def db(self):
-        return self.get_database(self.settings_dict['NAME'])
+        if not hasattr(self, '_db'):
+            self._db = self.get_database(self.settings_dict['NAME'])
+        return self._db
 
     def clear_all_collections(self):
         for collection_name in self.db.collection_names():
