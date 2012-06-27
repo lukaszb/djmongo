@@ -84,6 +84,9 @@ class DatabaseWrapper(BaseDatabaseWrapper):
             if can_drop_collection(collection_name):
                 self.db.drop_collection(collection_name)
 
+    def collections_count(self):
+        return len(self.db.collection_names())
+
 
 class DatabaseCreation(BaseDatabaseCreation):
     

@@ -5,6 +5,7 @@ from djmongo.document import Document
 from djmongo.test import TestCase
 from djmongo.backend.mongodb.base import DatabaseWrapper
 from djmongo.backend.mongodb.base import FakeCursor
+from django.db import connections
 
 
 class MyDocument(Document):
@@ -125,6 +126,16 @@ class TestObjectsDoNotLeakBetweenTests(TestCase):
 
         self.assertEqual(MyDocument.objects.count(), 2)
 
+    def test_clear_all_collections(self):
+        conn = connections['mongodb']
+        conn.db.testitems.insert({})
+        conn.db.testitems2.insert({})
+
+        col_count = conn.collections_count()
+        conn.clear_all_collections()
+
+        self.assertEqual(conn.collections_count(), col_count - 2)
+
 
 class TestObjectsAreCreatedDuringSetUp(TestCase):
 
@@ -135,4 +146,26 @@ class TestObjectsAreCreatedDuringSetUp(TestCase):
 
     def test_count(self):
         self.assertEqual(MyDocument.objects.count(), 3)
+
+
+class TestOverrideCanDropCollectionTestCase(TestCase):
+
+    collections_prefix = 'testfoo.'
+
+    def can_drop_collection(self, collection_name, connection):
+        return collection_name.startswith(self.collections_prefix)
+
+    def setUp(self):
+        self.conn = connections['mongodb']
+
+    def test_post_teardown(self):
+        self.conn.db.testfoo.items1.insert({})
+        self.conn.db.testfoo.items2.insert({})
+        self.conn.db.anothertest.items.insert({})
+
+        self.post_teardown()
+        # by now our testfoo.items1 and testfoo.items2 should be dropped
+        self.assertEqual(self.conn.db.testfoo.items1.count(), 0)
+        self.assertEqual(self.conn.db.testfoo.items2.count(), 0)
+        self.assertEqual(self.conn.db.anothertest.items.count(), 1)
 
