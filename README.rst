@@ -2,6 +2,9 @@
 djmongo
 =======
 
+.. image:: https://secure.travis-ci.org/lukaszb/djmongo.png?branch=master
+  :target: http://travis-ci.org/lukaszb/djmongo
+
 ``djmongo`` is yet another mongodb_ adapter for Django_. This one however, is
 build directly on pymongo_, tries to be as small and simple as possible and
 mimics Django_'s ORM (managers/querysets).
