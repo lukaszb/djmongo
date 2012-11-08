@@ -1,6 +1,8 @@
-from djmongo.test import TestCase
-from djmongo.querysets import QuerySet
 from djmongo.document import Document
+from djmongo.exceptions import MultipleItemsReturnedError
+from djmongo.querysets import QuerySet
+from djmongo.test import TestCase
+from mock import Mock
 
 
 class Item(Document):
@@ -21,6 +23,16 @@ class TestQuerySet(TestCase):
         queryset = QuerySet(Item)
         self.assertEqual(queryset.count(), 30)
 
+    def test_len_calls_count(self):
+        queryset = QuerySet(Item)
+        queryset.count = Mock(return_value=101)
+        self.assertEquals(len(queryset), 101)
+        queryset.count.assert_called_once_with()
+
+    def test_all(self):
+        queryset = QuerySet(Item)
+        self.assertEquals(queryset.all().count(), 30)
+
     def test_pluck(self):
         queryset = QuerySet(Item)
 
@@ -29,6 +41,15 @@ class TestQuerySet(TestCase):
 
         expected = range(10) * 3
         self.assertItemsEqual(queryset.pluck('number'), expected)
+
+    def test_pluck_with_multiple_fields(self):
+        queryset = QuerySet(Item).order_by('id')[:3]
+        self.assertItemsEqual(queryset.pluck('id', 'number'), [(1, 1), (2, 2), (3, 3)])
+
+    def test_get_filters(self):
+        queryset = QuerySet(Item).filter(slug__in=['foo', 'bar'], tag='baz')
+        self.assertDictEqual(queryset.get_filters(),
+            {'slug': {'$in': ['foo', 'bar']}, 'tag': 'baz'})
 
     def test_filter(self):
         queryset = QuerySet(Item)
@@ -101,4 +122,22 @@ class TestQuerySet(TestCase):
         self.assertEqual(item1.data['id'], 1)
         self.assertIsInstance(item2, Item)
         self.assertEqual(item2.data['id'], 2)
+
+    def test_combined_filter_order_slice(self):
+        queryset = QuerySet(Item).filter(number=2).order_by('id')[:2]
+        self.assertEquals(list(queryset.pluck('id')), [2, 12])
+
+    def test_get(self):
+        queryset = QuerySet(Item).order_by('id')
+        self.assertEquals(queryset.get(id=2).data['id'], 2)
+
+    def test_get_raises_multiple_docuemnts(self):
+        queryset = QuerySet(Item).order_by('id')
+        with self.assertRaises(MultipleItemsReturnedError):
+            queryset.get(number=2)
+
+    def test_get_raises_doesnotexist(self):
+        queryset = QuerySet(Item).order_by('id')
+        with self.assertRaises(Item.DoesNotExistError):
+            queryset.get(id=301)
 

@@ -13,7 +13,7 @@ class Item(Document):
 
 
 class TestManager(TestCase):
-    
+
     def test_raise_error_if_wrong_connection_used(self):
         with patch('djmongo.document.is_mongodb_connection') as m:
             m.return_value = False
@@ -60,16 +60,11 @@ class TestManager(TestCase):
         self.assertItemsEqual([item.data for item in Item.objects.filter(
             title='Pantera')], [item.data])
 
-    def test_get_filters(self):
-        self.assertDictEqual(Item.objects._get_filters(
-            dict(slug__in=['foo', 'bar'], tag='baz')),
-            {'slug': {'$in': ['foo', 'bar']}, 'tag': 'baz'})
-
     def test_filter__in(self):
         Item.objects.create(data={'slug': 'slayer'})
         Item.objects.create(data={'slug': 'sabaton'})
         Item.objects.create(data={'slug': 'therion'})
-        
+
         self.assertItemsEqual([item.data['slug'] for item in
             Item.objects.filter(slug__in=['slayer'])], ['slayer'])
         self.assertItemsEqual([item.data['slug'] for item in
@@ -125,7 +120,7 @@ class Book(Document):
 
 
 class TestCustomManager(TestCase):
-    
+
     def test_custom_manager_method_called(self):
         Book.objects.foo()
         Book.objects.foo()

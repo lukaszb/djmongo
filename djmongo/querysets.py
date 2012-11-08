@@ -1,5 +1,6 @@
-import pymongo
 from django.utils.datastructures import SortedDict
+from djmongo.exceptions import MultipleItemsReturnedError
+import pymongo
 
 
 class QuerySet(object):
@@ -30,6 +31,9 @@ class QuerySet(object):
         raise TypeError("QuerySet index should be int or slice (is: %s)"
             % index.__class__)
 
+    def __len__(self):
+        return self.count()
+
     def get_filters(self):
         for key in (k for k in self._filters if '__' in k):
             field, operator = key.split('__', 1)
@@ -49,7 +53,13 @@ class QuerySet(object):
         return ordering
 
     def clone(self):
-        return QuerySet(self.document, self._filters, self._ordering)
+        queryset = QuerySet(self.document, self._filters, self._ordering)
+        queryset.offset = self.offset
+        queryset.limit = self.limit
+        return queryset
+
+    def all(self):
+        return self
 
     def get_items(self):
         """
@@ -65,9 +75,12 @@ class QuerySet(object):
             items.limit(self.limit)
         return items
 
-    def pluck(self, key, default=None):
+    def pluck(self, *keys):
         for item in self.get_items():
-            yield item.get(key, None)
+            if len(keys) == 1:
+                yield item.get(keys[0], None)
+            else:
+                yield tuple(item.get(key) for key in keys)
 
     def count(self):
         return self.get_items().count()
@@ -88,4 +101,19 @@ class QuerySet(object):
         queryset = self.clone()
         queryset.add_ordering(ordering)
         return queryset
+
+    def get(self, **filters):
+        #"""
+        result = None
+        for item in self.filter(**filters):
+            if result is not None:
+                raise MultipleItemsReturnedError("More than one item found "
+                    "for filters: %r" % filters)
+            else:
+                result = item
+        if result is None:
+            raise self.document.DoesNotExistError("No item found for filters: %r"
+                % filters)
+        return result
+        #"""
 

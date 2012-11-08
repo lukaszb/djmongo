@@ -4,6 +4,7 @@ from django.core.exceptions import ImproperlyConfigured
 from djmongo.utils import is_mongodb_connection
 from djmongo.exceptions import MultipleItemsReturnedError
 from djmongo.exceptions import DjongoError
+from djmongo.querysets import QuerySet
 
 
 class Index(object):
@@ -49,6 +50,9 @@ class Manager(object):
     def __init__(self):
         pass
 
+    def get_queryset(self):
+        return QuerySet(self.document)
+
     @property
     def connection(self):
         conn = connections[self.document._meta.using]
@@ -69,7 +73,7 @@ class Manager(object):
         return self._get_collection()
 
     def count(self, **filters):
-        return self.collection.find(filters).count()
+        return self.filter(**filters).count()
 
     def create(self, **kwargs):
         document = self.document(**kwargs)
@@ -81,41 +85,16 @@ class Manager(object):
                 for name, index in self.collection.index_information().items()]
 
     def all(self):
-        for data in self.collection.find():
-            yield self.document(data=data)
-
-    def _get_filters(self, filters):
-        new_filters = filters.copy()
-        for key in (k for k in new_filters if '__' in k):
-            field, operator = key.split('__', 1)
-            if operator in ['in']:
-                new_filters[field] = {'$' + operator: list(new_filters.pop(key))}
-        return new_filters
+        return self.get_queryset().all()
 
     def filter(self, **filters):
-        filters = self._get_filters(filters)
-        for item in self.collection.find(filters):
-            yield self.document(data=item)
+        return self.get_queryset().filter(**filters)
 
     def get(self, **filters):
-        result = None
-        for item in self.collection.find(filters):
-            if result is not None:
-                raise MultipleItemsReturnedError("More than one item found "
-                    "for filters: %r" % filters)
-            else:
-                result = item
-        if result is None:
-            raise self.document.DoesNotExistError("No item found for filters: %r"
-                % filters)
-        return self.document(data=result)
+        return self.get_queryset().get(**filters)
 
     def pluck(self, *fields, **filters):
-        for doc in self.filter(**filters):
-            if len(fields) == 1:
-                yield doc.data.get(fields[0])
-            else:
-                yield tuple(doc.data.get(field) for field in fields)
+        return self.filter(**filters).pluck(*fields)
 
     def upsert(self, data, safe=True, **filters):
         result = self.collection.update(filters, data, upsert=True, safe=safe)
