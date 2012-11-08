@@ -23,7 +23,7 @@ class TestDocumentClassCreation(TestCase):
 
         self.MyDocument = MyDocument
         self.AnotherDocument = AnotherDocument
-        
+
     def test_manager_is_created_for_each_class(self):
         self.assertIsInstance(self.MyDocument.objects, Manager)
         self.assertIsInstance(self.AnotherDocument.objects, Manager)
@@ -58,6 +58,7 @@ class TestMetaOptions(TestCase):
             pass
 
         self.assertDictEqual(Options.defaults(ADoc), {
+            'app_label': None,
             'using': None,
             'collection_name': 'adoc',
             'indexes': [],
@@ -117,7 +118,7 @@ class TestIndexes(TestCase):
         self.assertEqual(sorted(manager.get_indexes()), sorted(expected))
 
     def test_proper_indexes_are_created(self):
-        
+
         index1 = Index('ID', unique=True)
         index2 = Index([('ID', Index.ASCENDING), ('title', Index.DESCENDING)])
 
@@ -171,4 +172,10 @@ class TestDocument(TestCase):
         item.save()
         self.assertEqual(Item.objects.get(title='Slayer').data.get('genre'),
             'trash metal')
+
+    def test_app_label(self):
+        self.assertEqual(Item._meta.app_label, 'djmongo')
+
+    def test_module_name(self):
+        self.assertEqual(Item._meta.module_name, 'item')
 

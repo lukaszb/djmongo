@@ -103,7 +103,6 @@ class QuerySet(object):
         return queryset
 
     def get(self, **filters):
-        #"""
         result = None
         for item in self.filter(**filters):
             if result is not None:
@@ -115,5 +114,4 @@ class QuerySet(object):
             raise self.document.DoesNotExistError("No item found for filters: %r"
                 % filters)
         return result
-        #"""
 

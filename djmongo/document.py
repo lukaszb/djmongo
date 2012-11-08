@@ -1,8 +1,8 @@
 import pymongo
 from django.db import connections
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from djmongo.utils import is_mongodb_connection
-from djmongo.exceptions import MultipleItemsReturnedError
 from djmongo.exceptions import DjongoError
 from djmongo.querysets import QuerySet
 
@@ -110,6 +110,7 @@ class Options(object):
     @classmethod
     def defaults(cls, Document):
         return {
+            'app_label': None,
             'using': None,
             'collection_name': Document.__name__.lower(),
             'indexes': [],
@@ -125,6 +126,15 @@ class Options(object):
             if hasattr(extra_opts, key):
                 setattr(opts, key, getattr(extra_opts, key))
 
+        # Calculate app_label
+        modname = Document.__module__
+        while modname:
+            if modname in settings.INSTALLED_APPS:
+                opts.app_label = modname.split('.')[-1]
+                break
+            modname = '.'.join(modname.split('.')[:-1])
+
+        opts.module_name = Document.__name__.lower().replace('_', '')
 
         return opts
 
