@@ -50,7 +50,7 @@ class Manager(object):
     def __init__(self):
         pass
 
-    def get_queryset(self):
+    def get_query_set(self):
         return QuerySet(self.document)
 
     @property
@@ -85,13 +85,13 @@ class Manager(object):
                 for name, index in self.collection.index_information().items()]
 
     def all(self):
-        return self.get_queryset().all()
+        return self.get_query_set().all()
 
     def filter(self, **filters):
-        return self.get_queryset().filter(**filters)
+        return self.get_query_set().filter(**filters)
 
     def get(self, **filters):
-        return self.get_queryset().get(**filters)
+        return self.get_query_set().get(**filters)
 
     def pluck(self, *fields, **filters):
         return self.filter(**filters).pluck(*fields)
@@ -103,7 +103,8 @@ class Manager(object):
         return self.document(data=data)
 
 
-META_KEYS = ['using', 'collection_name', 'indexes']
+META_KEYS = ['using', 'collection_name', 'indexes', 'verbose_name',
+    'verbose_name_plural']
 
 class Options(object):
 
@@ -113,6 +114,7 @@ class Options(object):
             'app_label': None,
             'using': None,
             'collection_name': Document.__name__.lower(),
+            'verbose_name': Document.__name__,
             'indexes': [],
         }
 
@@ -126,6 +128,10 @@ class Options(object):
             if hasattr(extra_opts, key):
                 setattr(opts, key, getattr(extra_opts, key))
 
+        # Update verbose_name_plural
+        if not hasattr(opts, 'verbose_name_plural'):
+            opts.verbose_name_plural = opts.verbose_name + 's'
+
         # Calculate app_label
         modname = Document.__module__
         while modname:
@@ -135,6 +141,7 @@ class Options(object):
             modname = '.'.join(modname.split('.')[:-1])
 
         opts.module_name = Document.__name__.lower().replace('_', '')
+        opts.object_name = Document.__name__
 
         return opts
 
@@ -143,11 +150,11 @@ class DocumentBase(type):
 
     def __new__(cls, name, bases, attrs):
         opts = attrs.pop('Meta', object())
+        manager = attrs['_default_manager'] = Manager()
         if 'objects' not in attrs:
-            attrs['objects'] = Manager()
-        manager = attrs['objects']
+            attrs['objects'] = manager
         new_class = super(DocumentBase, cls).__new__(cls, name, bases, attrs)
-        manager.document = new_class
+        manager.document = attrs['objects'].document = new_class
         new_class._meta = Options.for_class(new_class, opts)
         if new_class.auto_ensure_indexes:
             new_class.ensure_indexes()
@@ -185,11 +192,15 @@ class Document(object):
                 {'$set': update_data}, safe=safe)
         return self
 
+    @property
+    def pk(self):
+        return self.id
+
     @classmethod
     def ensure_indexes(cls):
         for index in cls._meta.indexes:
             index.create_for_collection(cls.objects.collection)
 
-    class DoesNotExistError(DjongoError):
+    class DoesNotExist(DjongoError):
         pass
 

@@ -49,7 +49,7 @@ class TestManager(TestCase):
         Item.objects.create(data={'title': 'Therion'})
         Item.objects.create(data={'title': 'Pantera'})
 
-        with self.assertRaises(Item.DoesNotExistError):
+        with self.assertRaises(Item.DoesNotExist):
             Item.objects.get(title='Slayer')
 
     def test_filter(self):

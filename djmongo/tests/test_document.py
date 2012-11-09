@@ -62,6 +62,7 @@ class TestMetaOptions(TestCase):
             'using': None,
             'collection_name': 'adoc',
             'indexes': [],
+            'verbose_name': 'ADoc',
         })
 
     def test_using_is_overridden(self):
@@ -178,4 +179,7 @@ class TestDocument(TestCase):
 
     def test_module_name(self):
         self.assertEqual(Item._meta.module_name, 'item')
+
+    def test_object_name(self):
+        self.assertEqual(Item._meta.object_name, 'Item')
 

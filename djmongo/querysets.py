@@ -1,6 +1,7 @@
 from django.utils.datastructures import SortedDict
 from djmongo.exceptions import MultipleItemsReturnedError
 import pymongo
+import re
 
 
 class QuerySet(object):
@@ -37,8 +38,16 @@ class QuerySet(object):
     def get_filters(self):
         for key in (k for k in self._filters if '__' in k):
             field, operator = key.split('__', 1)
-            if operator in ['in']:
-                self._filters[field] = {'$' + operator: list(self._filters.pop(key))}
+            if operator == 'in':
+                self._filters[field] = {'$in': list(self._filters.pop(key))}
+            elif operator in ['contains', 'icontains']:
+                pat = r'.*%s.*' % self._filters.pop(key)
+                if operator[0] == 'i':
+                    pattern = re.compile(pat, re.IGNORECASE)
+                else:
+                    pattern = re.compile(pat)
+                self._filters[field] = pattern
+
         return self._filters
 
     def get_ordering(self):
@@ -65,7 +74,7 @@ class QuerySet(object):
         """
         Returns pymongo result set.
         """
-        items =self.document.objects.collection.find(self.get_filters())
+        items = self.document.objects.collection.find(self.get_filters())
         ordering = self.get_ordering()
         if ordering:
             items = items.sort(ordering.items())
@@ -111,7 +120,11 @@ class QuerySet(object):
             else:
                 result = item
         if result is None:
-            raise self.document.DoesNotExistError("No item found for filters: %r"
+            raise self.document.DoesNotExist("No item found for filters: %r"
                 % filters)
         return result
+
+    @property
+    def model(self):
+        return self.document
 

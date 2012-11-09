@@ -1,0 +1,38 @@
+{% extends "admin/change_list.html" %}
+
+{% load djmongo_tags %}
+
+{% block extrehead %}
+{% endblock %}
+
+{% block nav-global %}
+<h1>{{ opts.verbose_name_plural }}</h1>
+{% endblock %}
+
+{% block result_list %}
+
+<div class="results">
+    <table id="result_list">
+        <thead>
+            <tr>
+                {% for key in list_display %}
+                <th scope="col">
+                    <div class="text"><a href="#">{{ key|capfirst }}</a></div>
+                </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr class="{% cycle 'row1' 'row2' %}">
+                {% for key in list_display %}
+                <td>{% get item.data key %}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+

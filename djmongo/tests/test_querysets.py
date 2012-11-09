@@ -62,6 +62,28 @@ class TestQuerySet(TestCase):
         self.assertItemsEqual(queryset.filter(id__in=[1, 3, 20, 40]).pluck('id'),
             [1, 3, 20])
 
+    def test_filter_contains(self):
+        Item.objects.collection.drop()
+        Item.objects.create(data={'title': 'Slayer'})
+        Item.objects.create(data={'title': 'Sabaton'})
+        Item.objects.create(data={'title': 'Metallica'})
+        Item.objects.create(data={'title': 'Metal Foobar'})
+        Item.objects.create(data={'title': 'Tristania'})
+
+        queryset = QuerySet(Item)
+
+        self.assertItemsEqual(queryset.filter(title__contains='metal').pluck(
+            'title'), [])
+
+        self.assertItemsEqual(queryset.filter(title__contains='Metal').pluck(
+            'title'), ['Metallica', 'Metal Foobar'])
+
+        self.assertItemsEqual(queryset.filter(title__icontains='metal').pluck(
+            'title'), ['Metallica', 'Metal Foobar'])
+
+        self.assertItemsEqual(queryset.filter(title__icontains='ta').pluck(
+            'title'), ['Metallica', 'Metal Foobar', 'Tristania'])
+
     def test_filter_span_another_queryset_with_previouse_filters(self):
         queryset = QuerySet(Item)
 
@@ -138,6 +160,6 @@ class TestQuerySet(TestCase):
 
     def test_get_raises_doesnotexist(self):
         queryset = QuerySet(Item).order_by('id')
-        with self.assertRaises(Item.DoesNotExistError):
+        with self.assertRaises(Item.DoesNotExist):
             queryset.get(id=301)
 
