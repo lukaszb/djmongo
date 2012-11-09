@@ -13,3 +13,4 @@ install:
 
 script: python setup.py test
 
+services: mongodb
