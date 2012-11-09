@@ -19,6 +19,10 @@ class TestQuerySet(TestCase):
                 'number': x % 10,
             })
 
+    def test_model(self):
+        queryset = QuerySet(Item)
+        self.assertEqual(queryset.document, queryset.model)
+
     def test_count(self):
         queryset = QuerySet(Item)
         self.assertEqual(queryset.count(), 30)

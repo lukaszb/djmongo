@@ -111,12 +111,22 @@ class CustomManager(Manager):
         self._foo_calls += 1
 
 
+class JohnDoeManager(Manager):
+
+    def get_query_set(self):
+        queryset = super(JohnDoeManager, self).get_query_set().filter(
+            author='John Doe')
+        return queryset
+
+
 class Book(Document):
 
     class Meta:
         using = 'mongodb'
 
     objects = CustomManager()
+    written_by_john = JohnDoeManager()
+
 
 
 class TestCustomManager(TestCase):
@@ -125,4 +135,18 @@ class TestCustomManager(TestCase):
         Book.objects.foo()
         Book.objects.foo()
         self.assertEqual(Book.objects._foo_calls, 2)
+
+    def test_is_default(self):
+        self.assertTrue(Book._default_manager.is_default())
+        self.assertFalse(Book.objects.is_default())
+
+    def test_get_managers(self):
+        self.assertDictEqual(Book.get_managers(), {
+            '_default_manager': Book._default_manager,
+            'objects': Book.objects,
+            'written_by_john': Book.written_by_john,
+        })
+        self.assertIsInstance(Book._default_manager, Manager)
+        self.assertIsInstance(Book.objects, CustomManager)
+        self.assertIsInstance(Book.written_by_john, JohnDoeManager)
 

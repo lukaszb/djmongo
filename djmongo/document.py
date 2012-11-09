@@ -1,3 +1,4 @@
+import inspect
 import pymongo
 from django.db import connections
 from django.conf import settings
@@ -53,20 +54,33 @@ class Manager(object):
     def get_query_set(self):
         return QuerySet(self.document)
 
+    def ensure_indexes(self, collection):
+        for index in self.document._meta.indexes:
+            index.create_for_collection(collection)
+
     @property
     def connection(self):
+
         conn = connections[self.document._meta.using]
         if not is_mongodb_connection(conn):
             raise ImproperlyConfigured("Must be used with mongodb backend "
                 "(got %r)" % conn)
+
+        if (self.document.auto_ensure_indexes and
+            not self.document._indexes_already_created):
+            self.ensure_indexes(self._get_collection(conn.db))
+            self.document._indexes_already_created = True
+
         return conn
 
     @property
     def db(self):
         return self.connection.db
 
-    def _get_collection(self):
-        return getattr(self.db, self.document._meta.collection_name)
+    def _get_collection(self, db=None):
+        if db is None:
+            db = self.db
+        return getattr(db, self.document._meta.collection_name)
 
     @property
     def collection(self):
@@ -101,6 +115,9 @@ class Manager(object):
         if safe:
             data['_id'] = result.get('upserted')
         return self.document(data=data)
+
+    def is_default(self):
+        return self == self.document._default_manager
 
 
 META_KEYS = ['using', 'collection_name', 'indexes', 'verbose_name',
@@ -156,14 +173,13 @@ class DocumentBase(type):
         new_class = super(DocumentBase, cls).__new__(cls, name, bases, attrs)
         manager.document = attrs['objects'].document = new_class
         new_class._meta = Options.for_class(new_class, opts)
-        if new_class.auto_ensure_indexes:
-            new_class.ensure_indexes()
         return new_class
 
 
 class Document(object):
     __metaclass__ = DocumentBase
 
+    _indexes_already_created = False
     auto_ensure_indexes = True
 
     def __init__(self, data=None):
@@ -196,11 +212,11 @@ class Document(object):
     def pk(self):
         return self.id
 
-    @classmethod
-    def ensure_indexes(cls):
-        for index in cls._meta.indexes:
-            index.create_for_collection(cls.objects.collection)
-
     class DoesNotExist(DjongoError):
         pass
+
+    @classmethod
+    def get_managers(cls):
+        predicate = lambda obj: isinstance(obj, Manager)
+        return dict(inspect.getmembers(cls, predicate))
 

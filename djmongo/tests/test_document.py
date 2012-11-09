@@ -128,8 +128,24 @@ class TestIndexes(TestCase):
                 using = 'mongodb'
                 indexes = [index1, index2]
 
+        IndexedDocument.objects.collection.drop_indexes()
+        indexes = IndexedDocument.objects.get_indexes()
+        IndexedDocument._indexes_already_created = False
+        # Indexes should be created only if there was attempt to make a conn
+        self.assertNotIn(index1, indexes)
+        self.assertNotIn(index2, indexes)
+
+        IndexedDocument.objects.connection
         self.assertIn(index1, IndexedDocument.objects.get_indexes())
         self.assertIn(index2, IndexedDocument.objects.get_indexes())
+
+        self.assertTrue(IndexedDocument._indexes_already_created)
+        IndexedDocument.objects.connection
+
+        # Make sure that ensure_indexes is not called once indexes were created
+        IndexedDocument.objects.ensure_indexes = Mock()
+        IndexedDocument.objects.connection
+        self.assertFalse(IndexedDocument.objects.ensure_indexes.called)
 
     def test_auto_ensure_indexes_is_respected(self):
 
@@ -154,6 +170,10 @@ class TestDocument(TestCase):
     def test_id(self):
         self.assertEqual(Document(data={'_id': 'foobar', 'foo': 'bar'}).id,
             'foobar')
+
+    def test_pk(self):
+        document = Document(data={'_id': 'foobar', 'foo': 'bar'})
+        self.assertEqual(document.id, document.pk)
 
     def test_repr(self):
         self.assertEqual(repr(Document(data={})), '<Document: {}>')
