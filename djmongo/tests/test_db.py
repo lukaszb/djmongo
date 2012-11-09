@@ -6,7 +6,19 @@ from djmongo.test import TestCase
 from djmongo.backend.mongodb.base import DatabaseWrapper
 from djmongo.backend.mongodb.base import FakeCursor
 from django.db import connections
+import pymongo
+import unittest
 
+
+HOST = 'localhost'
+PORT = 27017
+
+def has_local_db():
+    try:
+        pymongo.Connection(host=HOST, port=PORT)
+        return True
+    except pymongo.errors.AutoReconnect:
+        return False
 
 class MyDocument(Document):
 
@@ -21,7 +33,7 @@ class TestFakeCursor(TestCase):
         self.assertIsNone(cursor.execute())
         self.assertIsNone(cursor.execute(1, 2, foo='bar'))
 
-
+@unittest.skipIf(not has_local_db(), "There is no local mongodb instance to test")
 @patch('djmongo.backend.mongodb.base.ConnectionWrapper')
 class TestDatabaseWrapper(TestCase):
 
@@ -29,7 +41,7 @@ class TestDatabaseWrapper(TestCase):
         self.conn = DatabaseWrapper({
             'NAME': 'foobar',
             'HOST': 'localhost',
-            'PORT': 27017,
+            'PORT': PORT,
         })
 
     def test_cursor(self, *args):
@@ -43,7 +55,7 @@ class TestDatabaseWrapper(TestCase):
         with self.assertRaises(ImproperlyConfigured):
             DatabaseWrapper({
                 'HOST': 'localhost',
-                'PORT': 27017,
+                'PORT': PORT,
             })
 
     @patch('djmongo.backend.mongodb.base.django')
@@ -53,7 +65,7 @@ class TestDatabaseWrapper(TestCase):
             DatabaseWrapper({
                 'NAME': 'foobar',
                 'HOST': 'localhost',
-                'PORT': 27017,
+                'PORT': PORT,
             })
             m.assert_called_once_with()
 
@@ -64,7 +76,7 @@ class TestDatabaseWrapper(TestCase):
             db = DatabaseWrapper({
                 'NAME': 'foobar',
                 'HOST': 'localhost',
-                'PORT': 27017,
+                'PORT': PORT,
             })
             m.assert_called_once_with(db)
 
@@ -74,7 +86,7 @@ class TestDatabaseWrapper(TestCase):
 
     def test_ops_quote_name(self, cw_mock):
         self.assertEqual(self.conn.ops.quote_name('foo'), repr('foo'))
-            
+
     def test_ops_sql_flush(self, cw_mock):
         self.assertEqual(self.conn.ops.sql_flush(), [])
 
@@ -110,6 +122,8 @@ class TestDatabaseWrapper(TestCase):
         creation.connection = Mock()
         creation.drop_database('foo')
         creation.connection.get_connection().drop_database.assert_called_with('foo')
+
+
 
 
 class TestObjectsDoNotLeakBetweenTests(TestCase):
