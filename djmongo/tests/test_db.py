@@ -1,13 +1,13 @@
 from mock import patch
 from mock import Mock
 from django.core.exceptions import ImproperlyConfigured
+from djmongo.compat import unittest
 from djmongo.document import Document
 from djmongo.test import TestCase
 from djmongo.backend.mongodb.base import DatabaseWrapper
 from djmongo.backend.mongodb.base import FakeCursor
 from django.db import connections
 import pymongo
-import unittest
 
 
 HOST = 'localhost'

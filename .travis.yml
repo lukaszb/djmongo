@@ -8,7 +8,7 @@ env:
  - DJANGO_VERSION=1.4
 
 install:
-  - pip install -q mock==0.8 Django==$DJANGO_VERSION --use-mirrors
+  - pip install -q mock==0.8 Django==$DJANGO_VERSION unittest2 --use-mirrors
   - pip install . --use-mirrors
 
 script: python setup.py test
