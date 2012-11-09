@@ -40,6 +40,7 @@ class DocumentAdmin(admin.ModelAdmin):
     fields = []
     document_list_display = ['_id']
     search_field = 'title'
+    changelist_cls = DocumentChangeList
 
     @admin.options.csrf_protect_m
     def changelist_view(self, request, extra_context=None):
@@ -50,7 +51,7 @@ class DocumentAdmin(admin.ModelAdmin):
         if self.search_field and query and re.match(r'[a-z \d]+', query, re.IGNORECASE):
             items = items.filter(**{'%s__icontains' % self.search_field: query})
 
-        changelist = DocumentChangeList(request, self, items)
+        changelist = self.changelist_cls(request, self, items)
 
         data = {
             'items': changelist.get_results(),
