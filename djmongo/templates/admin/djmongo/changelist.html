@@ -26,7 +26,7 @@
             {% for item in items %}
             <tr class="{% cycle 'row1' 'row2' %}">
                 {% for key in list_display %}
-                <td>{% get item.data key %}</td>
+                <td>{% get item key %}</td>
                 {% endfor %}
             </tr>
             {% endfor %}

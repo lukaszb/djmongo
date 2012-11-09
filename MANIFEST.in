@@ -4,3 +4,4 @@ include manage.py
 include tests.py
 include run_test_and_report.sh
 recursive-include djmongo *.py
+recursive-include djmongo/templates *.html
