@@ -40,6 +40,8 @@ class QuerySet(object):
             field, operator = key.split('__', 1)
             if operator == 'in':
                 self._filters[field] = {'$in': list(self._filters.pop(key))}
+            elif operator in ['gt', 'gte', 'lt', 'lte']:
+                self._filters[field] = {'$' + operator: self._filters.pop(key)}
             elif operator in ['contains', 'icontains']:
                 pat = r'.*%s.*' % self._filters.pop(key)
                 if operator[0] == 'i':

@@ -88,6 +88,25 @@ class TestQuerySet(TestCase):
         self.assertItemsEqual(queryset.filter(title__icontains='ta').pluck(
             'title'), ['Metallica', 'Metal Foobar', 'Tristania'])
 
+    def test_greater_less_than_equal(self):
+        Item.objects.collection.drop()
+        Item.objects.create(data={'id': 1, 'date': '2012-10-12', 'weight': 90})
+        Item.objects.create(data={'id': 2, 'date': '2012-10-13', 'weight': 88})
+        Item.objects.create(data={'id': 3, 'date': '2012-10-14', 'weight': 85})
+        Item.objects.create(data={'id': 4, 'date': '2012-10-15', 'weight': 80})
+        queryset = QuerySet(Item)
+
+        self.assertItemsEqual(queryset.filter(date__gt='2012-10-13').pluck('id'),
+            [3, 4])
+        self.assertItemsEqual(queryset.filter(date__gte='2012-10-13').pluck('id'),
+            [2, 3, 4])
+        self.assertItemsEqual(queryset.filter(weight__gte=85,
+            date__lt='2012-10-14').pluck('id'), [1, 2])
+        self.assertItemsEqual(queryset.filter(weight__lte=88).pluck('id'),
+            [2, 3, 4])
+        self.assertItemsEqual(queryset.filter(id__lte=2, weight__gte=88).pluck('id'),
+            [1, 2])
+
     def test_filter_span_another_queryset_with_previouse_filters(self):
         queryset = QuerySet(Item)
 
