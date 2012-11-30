@@ -186,3 +186,36 @@ class TestQuerySet(TestCase):
         with self.assertRaises(Item.DoesNotExist):
             queryset.get(id=301)
 
+    def test_update(self):
+        result = QuerySet(Item).update(foo='bar')
+        self.assertDictContainsSubset({
+            'n': 30,
+            'ok': 1.0,
+            'err': None,
+            'updatedExisting': True,
+        }, result)
+        self.assertItemsEqual(Item.objects.pluck('foo'), ['bar' for x in xrange(30)])
+
+    def test_update_uses_filters(self):
+        result = QuerySet(Item).filter(id__in=[1, 3, 27]).update(foo=[10])
+        self.assertDictContainsSubset({
+            'n': 3,
+            'ok': 1.0,
+            'err': None,
+            'updatedExisting': True,
+        }, result)
+        items = Item.objects.filter(id__in=[1, 3, 27])
+        self.assertItemsEqual(items.pluck('foo', 'number'), [
+            ([10], 1), ([10], 3), ([10], 7)])
+
+    def test_update_upsert(self):
+        result = QuerySet(Item).filter(id=101).update(foo='bar', upsert=True)
+        self.assertDictContainsSubset({
+            'n': 1,
+            'ok': 1.0,
+            'err': None,
+            'updatedExisting': False,
+        }, result)
+        item = Item.objects.get(id=101)
+        self.assertEqual(item.id, result['upserted'])
+

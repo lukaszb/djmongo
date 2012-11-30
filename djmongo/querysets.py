@@ -35,6 +35,10 @@ class QuerySet(object):
     def __len__(self):
         return self.count()
 
+    @property
+    def collection(self):
+        return self.document._default_manager.collection
+
     def get_filters(self):
         for key in (k for k in self._filters if '__' in k):
             field, operator = key.split('__', 1)
@@ -76,7 +80,7 @@ class QuerySet(object):
         """
         Returns pymongo result set.
         """
-        items = self.document.objects.collection.find(self.get_filters())
+        items = self.collection.find(self.get_filters())
         ordering = self.get_ordering()
         if ordering:
             items = items.sort(ordering.items())
@@ -125,6 +129,15 @@ class QuerySet(object):
             raise self.document.DoesNotExist("No item found for filters: %r"
                 % filters)
         return result
+
+    def update_raw(self, data, safe=True, upsert=False, multi=True):
+        dataset = {'$set': data or {}}
+        return self.collection.update(self.get_filters(), dataset, safe=safe,
+            upsert=upsert, multi=multi)
+
+    def update(self, safe=True, upsert=False, **data):
+        return self.update_raw(data, safe=safe, upsert=upsert)
+
 
     @property
     def model(self):
