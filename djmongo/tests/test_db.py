@@ -116,14 +116,11 @@ class TestDatabaseWrapper(TestCase):
         self.assertEqual(self.conn.get_connection_uri(),
             'example.com:101')
 
-
     def test_creation_drop_database(self, cw_mock):
         creation = self.conn.creation
         creation.connection = Mock()
         creation.drop_database('foo')
         creation.connection.get_connection().drop_database.assert_called_with('foo')
-
-
 
 
 class TestObjectsDoNotLeakBetweenTests(TestCase):
@@ -182,4 +179,13 @@ class TestOverrideCanDropCollectionTestCase(TestCase):
         self.assertEqual(self.conn.db.testfoo.items1.count(), 0)
         self.assertEqual(self.conn.db.testfoo.items2.count(), 0)
         self.assertEqual(self.conn.db.anothertest.items.count(), 1)
+
+
+class TestDjmongoTestCase(TestCase):
+
+    def setUp(self):
+        self.conn = connections['mongodb']
+
+    def test_that_we_use_test_name(self):
+        self.assertEqual(self.conn.db.name, 'test_testdb')
 

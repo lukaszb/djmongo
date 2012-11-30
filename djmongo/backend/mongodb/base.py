@@ -89,7 +89,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
 
 class DatabaseCreation(BaseDatabaseCreation):
-    
+
     def create_test_db(self, verbosity=1, autoclobber=False):
         """
         Creates a test database, prompting the user for confirmation if the
@@ -99,10 +99,10 @@ class DatabaseCreation(BaseDatabaseCreation):
         # We do not need to create db actually - it is created 'on the fly' by
         # underlying pymongo; Still, by call to collection_names method we
         # ensure that database is created
-        self.connection.db.collection_names()
-
         self.connection.settings_dict['_NAME'] = self.connection.settings_dict['NAME']
         self.connection.settings_dict['NAME'] = test_db_name
+        self.connection.db.collection_names()
+
 
     def destroy_test_db(self, old_database_name, verbosity=1):
         """
@@ -119,7 +119,7 @@ class DatabaseCreation(BaseDatabaseCreation):
 
 
 class DatabaseIntrospection(BaseDatabaseIntrospection):
-    
+
     def get_table_list(self, cursor):
         return []
 
