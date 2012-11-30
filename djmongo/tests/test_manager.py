@@ -101,6 +101,17 @@ class TestManager(TestCase):
         item = Item.objects.upsert(data, id=1, safe=False)
         self.assertDictEqual(item.data, data)
 
+    def test_update(self):
+        for x in range(10):
+            Item.objects.create(data={'id': x})
+        result = Item.objects.update(foo='bar')
+        self.assertDictContainsSubset({
+            'n': 10,
+            'ok': 1.0,
+            'err': None,
+            'updatedExisting': True,
+        }, result)
+        self.assertItemsEqual(Item.objects.pluck('foo'), ['bar' for x in range(10)])
 
 
 class CustomManager(Manager):

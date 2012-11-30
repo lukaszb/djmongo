@@ -116,6 +116,13 @@ class Manager(object):
             data['_id'] = result.get('upserted')
         return self.document(data=data)
 
+    def update_raw(self, data, safe=True, upsert=False, multi=True):
+        return self.get_query_set().update_raw(data, safe=safe, upsert=upsert,
+            multi=multi)
+
+    def update(self, safe=True, upsert=False, **data):
+        return self.update_raw(data, safe=safe, upsert=upsert)
+
     def is_default(self):
         return self == self.document._default_manager
 
