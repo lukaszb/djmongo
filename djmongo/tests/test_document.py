@@ -41,7 +41,8 @@ class TestDocumentClassCreation(TestCase):
         self.assertEqual(self.MyDocument.objects.document, self.MyDocument)
 
     def test_meta_has_proper_collection_name(self):
-        self.assertEqual(self.MyDocument._meta.collection_name, 'mydocument')
+        self.assertEqual(self.MyDocument._meta.collection_name,
+            'djmongo.tests.mydocument')
 
         class SomeDocument(Document):
             class Meta:
@@ -60,7 +61,7 @@ class TestMetaOptions(TestCase):
         self.assertDictEqual(Options.defaults(ADoc), {
             'app_label': None,
             'using': None,
-            'collection_name': 'adoc',
+            'collection_name': 'djmongo.tests.adoc',
             'indexes': [],
             'verbose_name': 'ADoc',
         })

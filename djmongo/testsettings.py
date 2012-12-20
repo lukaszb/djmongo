@@ -16,3 +16,6 @@ DATABASES = {
 INSTALLED_APPS = (
     'djmongo',
 )
+
+MONGODB_COLLECTIONS_PREFIX = 'djmongo.tests'
+

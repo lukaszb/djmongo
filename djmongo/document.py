@@ -137,7 +137,8 @@ class Options(object):
         return {
             'app_label': None,
             'using': None,
-            'collection_name': Document.__name__.lower(),
+            'collection_name': '%s.%s' % (settings.MONGODB_COLLECTIONS_PREFIX,
+                Document.__name__.lower()),
             'verbose_name': Document.__name__,
             'indexes': [],
         }

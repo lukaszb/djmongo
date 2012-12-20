@@ -80,6 +80,10 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         return self._db
 
     def clear_all_collections(self):
+        """
+        Drops all collection that are prefixed with
+        ``settings.MONGODB_COLLECTIONS_PREFIX``.
+        """
         for collection_name in self.db.collection_names():
             if can_drop_collection(collection_name):
                 self.db.drop_collection(collection_name)

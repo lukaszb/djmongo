@@ -41,6 +41,19 @@ straight-forward::
 In above example we added ``mongodb`` aliased connection to local mongodb
 server.
 
+In your settings you should also provide ``MONGODB_COLLECTIONS_PREFIX`` value.
+By default documents would use it as a prefix for all collections. In example
+following docuemnt::
+
+    class Item(Document):
+        pass
+
+with ``MONGODB_COLLECTIONS_PREFIX`` set to ``develop``.  would have collection
+name equal to ``develop.item``.
+
+If you want to override default collection name you should always remember to
+use that prefix from settings (only collections with that prefix are dropped
+during test run).
 
 Usage
 -----
@@ -48,6 +61,7 @@ Usage
 Create a document::
 
     from djmongo.document import Document
+    from django.conf import settings
 
     class MyDocument(Document):
 

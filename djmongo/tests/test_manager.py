@@ -75,6 +75,9 @@ class TestManager(TestCase):
         Item.objects.create(data={'title': 'Therion', 'id': 2})
         Item.objects.create(data={'title': 'Pantera', 'id': 3})
 
+        from django.db import connections
+        conn = connections['mongodb']
+        #import ipdb; ipdb.set_trace()
         self.assertItemsEqual(Item.objects.pluck('title'),
             ['Sabaton', 'Therion', 'Pantera'])
 

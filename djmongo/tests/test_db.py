@@ -1,12 +1,13 @@
 from mock import patch
 from mock import Mock
 from django.core.exceptions import ImproperlyConfigured
+from django.db import connections
+from djmongo.compat import override_settings
+from djmongo.backend.mongodb.base import DatabaseWrapper
+from djmongo.backend.mongodb.base import FakeCursor
 from djmongo.compat import unittest
 from djmongo.document import Document
 from djmongo.test import TestCase
-from djmongo.backend.mongodb.base import DatabaseWrapper
-from djmongo.backend.mongodb.base import FakeCursor
-from django.db import connections
 import pymongo
 
 
@@ -137,10 +138,11 @@ class TestObjectsDoNotLeakBetweenTests(TestCase):
 
         self.assertEqual(MyDocument.objects.count(), 2)
 
+    @override_settings(MONGODB_COLLECTIONS_PREFIX='djmongo.tests')
     def test_clear_all_collections(self):
         conn = connections['mongodb']
-        conn.db.testitems.insert({})
-        conn.db.testitems2.insert({})
+        conn.db.djmongo.tests.testitems.insert({})
+        conn.db.djmongo.tests.testitems2.insert({})
 
         col_count = conn.collections_count()
         conn.clear_all_collections()
@@ -159,9 +161,10 @@ class TestObjectsAreCreatedDuringSetUp(TestCase):
         self.assertEqual(MyDocument.objects.count(), 3)
 
 
+@override_settings(MONGODB_COLLECTIONS_PREFIX='djmongo.tests')
 class TestOverrideCanDropCollectionTestCase(TestCase):
 
-    collections_prefix = 'testfoo.'
+    collections_prefix = 'djmongo.tests.foo.'
 
     def can_drop_collection(self, collection_name, connection):
         return collection_name.startswith(self.collections_prefix)
@@ -170,15 +173,15 @@ class TestOverrideCanDropCollectionTestCase(TestCase):
         self.conn = connections['mongodb']
 
     def test_post_teardown(self):
-        self.conn.db.testfoo.items1.insert({})
-        self.conn.db.testfoo.items2.insert({})
-        self.conn.db.anothertest.items.insert({})
+        self.conn.db.djmongo.tests.foo.items1.insert({})
+        self.conn.db.djmongo.tests.foo.items2.insert({})
+        self.conn.db.djmongo.tests.anothertest.items.insert({})
 
         self.post_teardown()
         # by now our testfoo.items1 and testfoo.items2 should be dropped
-        self.assertEqual(self.conn.db.testfoo.items1.count(), 0)
-        self.assertEqual(self.conn.db.testfoo.items2.count(), 0)
-        self.assertEqual(self.conn.db.anothertest.items.count(), 1)
+        self.assertEqual(self.conn.db.djmongo.tests.foo.items1.count(), 0)
+        self.assertEqual(self.conn.db.djmongo.tests.foo.items2.count(), 0)
+        self.assertEqual(self.conn.db.djmongo.tests.anothertest.items.count(), 1)
 
 
 class TestDjmongoTestCase(TestCase):
